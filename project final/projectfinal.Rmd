@@ -1,0 +1,152 @@
+---
+title: "Automatic/ manual transmission and MPG"
+author: "raicadaudinh"
+date: "Sunday, February 22, 2015"
+output:
+  pdf_document:
+    fig_caption: yes
+    fig_crop: no
+    number_sections: yes
+---
+# Summary
+        In this document We'll investigating the relation between fuel consumption(mpg) and tranmission (automatic or manual). The result show that we can conclude between automatic and manual which one is better because weight plays an importance role. The difference of MPG between automatic and manual transmission is not constant and depends on weight.
+# Exploratory analysis
+
+## The Data
+
+The data was extracted from the 1974 Motor Trend US magazine, and comprises fuel consumption and 10 aspects of automobile design and performance for 32 automobiles (1973-74 models). </br>
+
+
+```{r sumdata, echo=FALSE}
+library(datasets)
+data(mtcars)
+```
+
+```{r sumdata2, echo=TRUE}
+head(mtcars,2)
+```
+
+The data was extracted from the 1974 Motor Trend US magazine, and comprises fuel consumption and 10 aspects of automobile design and performance for 32 automobiles (1973-74 models). </br>
+
+_mpg_ (Miles/(US) gallon) is our output variable. The _am_(transmission 0=automatic, 1= manual) is our predictor. We'll investigating the relation of _mpg_ and _am_. </br>
+The _Mpg_ is a continous variable and _am_ is a dummy variable which takes 0 for automatic and 1 for manual. </br>
+
+We will check if we should include other variables in the database into our model. We do not want inflate our model nor exclude useful variable. Among theses variables, _cyl_, _vs_, _gear_, _carb_ are dummies variables, and _disp_, _hp_, _drat_, _wt_, _qsec_ are continous variable.</br>
+
+The dummies variables wil be change to factor when fitting the model
+
+## Am and mpg
+We can observe that there are group effect on mpg. We can suppose that the manual transmission (am=1) increasing fuel consumption. _see plot1_
+
+
+## am and other independent variables:
+
+I made point plots for other variable and color it by am. I want to check the relation between automatic/ ùanual transmission with other variables. Nevertheless, I just show useful plots._See plot2_
+
+
+We can observe that the values of _wt_, _disp_, _drat_ are related to _am_. When fitting the model, it suggest that we should create a variable of interaction between _am_ and these variables.
+
+```{r plot1, echo=FALSE, fig.height=3, fig.width=4, fig.cap="plot1: mpg vs am"}
+library(ggplot2)
+g<-ggplot(mtcars, aes(y=mpg, x=factor(am), fill=factor(am))) + geom_boxplot()
+g
+```
+
+
+```{r plot3, echo=FALSE, fig.height=7,fig.width=10, fig.cap="Plot2: am versus wt, disp, drat"}
+p1<-ggplot(mtcars, aes(y=wt, x=seq(1, length(wt))))+ geom_point(aes(color=factor(am)))
+p2<-ggplot(mtcars, aes(y=cyl, x=seq(1, length(cyl))))+ geom_point(aes(color=factor(am)))
+p3<-ggplot(mtcars, aes(y=disp, x=seq(1, length(disp))))+ geom_point(aes(color=factor(am)))
+p4<-ggplot(mtcars, aes(y=hp, x=seq(1, length(hp))))+ geom_point(aes(color=factor(am)))
+p5<-ggplot(mtcars, aes(y=drat, x=seq(1, length(drat))))+ geom_point(aes(color=factor(am)))
+p6<-ggplot(mtcars, aes(y=vs, x=seq(1, length(vs))))+ geom_point(aes(color=factor(am)))
+p7<-ggplot(mtcars, aes(y=carb, x=seq(1, length(carb))))+ geom_point(aes(color=factor(am)))
+p8<-ggplot(mtcars, aes(y=gear, x=seq(1, length(gear))))+ geom_point(aes(color=factor(am)))
+p9<-ggplot(mtcars, aes(y=qsec, x=seq(1, length(qsec))))+ geom_point(aes(color=factor(am)))
+library(grid)
+library(gridExtra)
+grid.arrange(p1, p3, p5, ncol = 2)
+```
+
+# Choosing the right model
+
+## First Model
+
+```{r firstModel, echo=FALSE}
+fit<-lm(mpg~ factor(am), data=mtcars)
+summary(fit)$coefficients
+```
+
+The p value of am is inferior than 0.001 so we reject the hypothesis: coeff=0. Nevertheless, the coefficient of am could be overevaluated. We wonder if adding other variables into our model could improve its power.
+
+## Choosing predictors
+
+We will adding variable into our model one by one and use `{r anova}` to check if it worths to adding this variable. The order is defined by the absolute value of the correlation of mpg with the variable. I'll put the variable with strongest value first.
+
+```{r cor, echo=TRUE}
+sort(abs(cor(mtcars)[,1]), decreasing=TRUE)
+```
+
+The criteria of choosing the model passing the `{r anova}` test (p value <5%). Then I also look at the ajusted R^2 value. I'll show just the useful models that passed the `{r anova}` test.
+```{r fit, echo=FALSE, results='hide'}
+int1<-lm(mpg~ factor(am)+ wt+ wt*factor(am), data=mtcars)
+anova(fit, int1)
+int2<-lm(mpg~ factor(am)+ wt+ wt*factor(am)+ factor(cyl), data=mtcars)
+anova(fit, int1, int2)
+int3<-lm(mpg~ factor(am)+ wt+ wt*factor(am)+ factor(cyl)+ disp*factor(am), data=mtcars)
+anova(fit, int1, int2, int3)
+int4<-lm(mpg~ factor(am)+ wt+ wt*factor(am)+ factor(cyl)+ hp, data=mtcars)
+anova(fit, int1, int2, int4)
+```
+
+
+```{r fit3,echo=FALSE, results="hide"}
+int5<-lm(mpg~ factor(am)+ wt+ wt*factor(am)+ factor(cyl)+ drat*factor(am), data=mtcars)
+anova(fit, int1, int2, int5)
+int6<-lm(mpg~ factor(am)+ wt+ wt*factor(am)+ factor(cyl)+ factor(vs), data=mtcars)
+anova(fit, int1, int2, int6)
+int7<-lm(mpg~ factor(am)+ wt+ wt*factor(am)+ factor(cyl)+ carb, data=mtcars)
+anova(fit, int1, int2, int7)
+int8<-lm(mpg~ factor(am)+ wt+ wt*factor(am)+ factor(cyl)+ factor(gear), data=mtcars)
+anova(fit, int1, int2, int8)
+int9<-lm(mpg~ factor(am)+ wt+ wt*factor(am)+ factor(cyl)+ qsec, data=mtcars)
+anova(fit, int1, int2, int9)
+```
+
+the p_value of these model are inferior than 5% thus passed the `{r anova}` test.
+There are three models that passed the tests. Looking at their adjusted $R^2$, the int9 model has highest value.
+```{r fit2, echo=TRUE}
+anova(fit, int1, int2, int9)
+rbind(summary(fit)$adj.r.squared, summary(int1)$adj.r.squared, summary(int2)$adj.r.squared, summary(int9)$adj.r.squared)
+```
+
+I choose int9 to interpret the effect of am on mpg. We can notice than the p_value of am and the interaction term am*wt are lower than 5% thus their coefficients are different from 0
+
+```{r final, echo=FALSE}
+summary(int9)$coefficients
+```
+
+#Interpretting the effect
+
+## The effect of am on mpg
+
+Our model: $mpg_i= \beta_0 + \beta_1* am_{i1}  + \beta_2* cyl6_{i2} + \beta_3* cyl8_{i3}+ \beta_4* qsec_{i4} + \beta_5* wt*am_{i5}+ \beta_6*wt_{i6}   + \epsilon_i$
+
+$am_{i1}$ is 1 for manual and 0 automatic transmission.
+$wt*am_{i5}$ is the interaction term between weight and transmission </br>
+$beta_1$: when all else are constant, in comparison with am transmission, the manual transmission's effect on mpg is higher than the am's effect by $beta_1=$ `r round(summary(int9)$coefficients[2],3)` miles/(US) gallon. </br>
+$beta_5$: with an increase by 1 unit of weight, the effect of manual transmission on mpg in comparison with the am transmission is reduced by $beta_5=$ `r round(summary(int9)$coefficients[7],3)`. </br>
+
+So the manual transmission did increase the mpg but its effect reduces when weight increases. 
+"Is an automatic or manual transmission better for MPG?" The answer is its depend on weight. For light weight, the automatic is better but for higher weight, the manual is better. 
+
+## Quantify the MPG difference between automatic and manual transmissions?
+
+The difference of the expected of value of mpg between automatic and manual transmission  holding all other variables constant is: </br>
+$E[mpg_i|am_i=1, all-else-constant]- E[mpg_i|am_i=0, all-else-constant]=\beta_1+\beta_5*wt_i$
+This difference depends on weight and not constant.
+
+# Conclusion
+We can not say the automatic or manual is better because its effect depends on weight. The difference of mpg is not constant and also depends on weight. In this regression, we can not conlude any causal relation between transmission and mpg. Perhaps, it is weight that determine the kind of transmission and weight has most important influence on mpg.  
+
+
