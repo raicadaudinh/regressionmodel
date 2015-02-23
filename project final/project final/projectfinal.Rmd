@@ -7,9 +7,18 @@ output:
     fig_caption: yes
     fig_crop: no
     number_sections: yes
+  html_document: default
 ---
+
+
 # Summary
-        In this document We'll investigating the relation between fuel consumption(mpg) and tranmission (automatic or manual). The result show that we can conclude between automatic and manual which one is better because weight plays an importance role. The difference of MPG between automatic and manual transmission is not constant and depends on weight.
+
+
+In this document We'll investigating the relation between fuel consumption(mpg) and tranmission (automatic or manual). <br/>
+        
+The result show that we can conclude between automatic and manual which one is better because weight plays an importance role. The difference of MPG between automatic and manual transmission is not constant and depends on weight. </br>
+
+
 # Exploratory analysis
 
 ## The Data
@@ -26,7 +35,6 @@ data(mtcars)
 head(mtcars,2)
 ```
 
-The data was extracted from the 1974 Motor Trend US magazine, and comprises fuel consumption and 10 aspects of automobile design and performance for 32 automobiles (1973-74 models). </br>
 
 _mpg_ (Miles/(US) gallon) is our output variable. The _am_(transmission 0=automatic, 1= manual) is our predictor. We'll investigating the relation of _mpg_ and _am_. </br>
 The _Mpg_ is a continous variable and _am_ is a dummy variable which takes 0 for automatic and 1 for manual. </br>
@@ -70,16 +78,10 @@ grid.arrange(p1, p3, p5, ncol = 2)
 
 # Choosing the right model
 
-## First Model
-
 ```{r firstModel, echo=FALSE}
 fit<-lm(mpg~ factor(am), data=mtcars)
 summary(fit)$coefficients
 ```
-
-The p value of am is inferior than 0.001 so we reject the hypothesis: coeff=0. Nevertheless, the coefficient of am could be overevaluated. We wonder if adding other variables into our model could improve its power.
-
-## Choosing predictors
 
 We will adding variable into our model one by one and use `{r anova}` to check if it worths to adding this variable. The order is defined by the absolute value of the correlation of mpg with the variable. I'll put the variable with strongest value first.
 
@@ -124,8 +126,14 @@ I choose int9 to interpret the effect of am on mpg. We can notice than the p_val
 
 ```{r final, echo=FALSE}
 summary(int9)$coefficients
+par(mfrow = c(2,2))
+plot(int9)
 ```
 
+The residual vs fitted plot suggests homoscedasticity </br>
+QQ plot investihates the normality of the error </br>
+The residual vs leverage suggests that some points (Merc 240D, Toyota Corrola)
+have high leverage and high standardized reisduals.</br>
 #Interpretting the effect
 
 ## The effect of am on mpg
